@@ -1,0 +1,843 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user within the system.  Authentication details (passwords) are NOT stored here.  This entity stores user details and roles.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "username": {
+          "type": "string",
+          "description": "The user's username."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The user's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The user's last name."
+        },
+        "role": {
+          "type": "string",
+          "description": "The user's role.",
+          "enum": ["Admin", "Sales", "Viewer", "User"]
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates if the user account is active."
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email",
+        "firstName",
+        "lastName",
+        "role",
+        "isActive"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product in the inventory.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the product."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the product."
+        },
+        "exw": { "type": "number" },
+        "fob": { "type": "number" },
+        "cif": { "type": "number" },
+        "vesPrice": { "type": "number" },
+        "retailPrice": { "type": "number" },
+        "stock": {
+          "type": "number",
+          "description": "The current stock level of the product."
+        },
+        "image": {
+          "type": "string",
+          "description": "URL of the product photo.",
+          "format": "uri"
+        },
+        "warehouse": {
+          "type": "string",
+          "description": "The warehouse where the product is located.",
+          "enum": [
+            "Almacén Principal",
+            "Almacén Secundario",
+            "Depósito"
+          ]
+        },
+        "serialNumber": {
+          "type": "string",
+          "description": "The product's serial number."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The historical total quantity of the product ever entered into inventory."
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit of measure for the product (e.g., Pieza, Metro, Kg)."
+        },
+        "unitValue": {
+            "type": ["number", "null"],
+            "description": "The value or quantity associated with the unit of measure."
+        },
+        "isComposite": {
+          "type": "boolean",
+          "description": "Indicates if the product is composed of other components."
+        },
+        "components": {
+          "type": "array",
+          "description": "List of components for a composite product.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "number"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "unitValue": {
+                "type": ["number", "null"]
+              },
+              "description": {
+                "type": "string"
+              },
+              "informativePrice": {
+                "type": ["number", "null"],
+                "description": "An informative price for the component, does not affect the total product price."
+              }
+            },
+            "required": [
+              "name",
+              "quantity",
+              "unit",
+              "description"
+            ]
+          }
+        },
+        "datasheets": {
+          "type": "array",
+          "description": "List of product datasheets.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "url": { "type": "string", format: "uri" }
+            },
+            "required": ["name", "url"]
+          }
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of when the product was created."
+        },
+        "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the last update to the product."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "stock",
+        "image",
+        "warehouse",
+        "serialNumber",
+        "unit",
+        "quantity"
+      ]
+    },
+    "InventoryMovement": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "InventoryMovement",
+      "type": "object",
+      "description": "Represents a movement of inventory (e.g., entry, exit, adjustment).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the inventory movement."
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to Product. (Relationship: Product 1:N InventoryMovement)"
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of movement (e.g., entry, exit, adjustment).",
+           "enum": ["entry", "exit", "adjustment"]
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the product moved."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date and time of the movement.",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes about the movement."
+        }
+      },
+      "required": [
+        "id",
+        "productId",
+        "type",
+        "quantity",
+        "date"
+      ]
+    },
+    "Import": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Import",
+      "type": "object",
+      "description": "Represents an import transaction.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the import."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the import transaction."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the import.",
+          "format": "date-time"
+        },
+        "fobValue": {
+          "type": "number",
+          "description": "FOB (Free on Board) value of the import."
+        },
+        "exnValue": {
+          "type": "number",
+          "description": "EXN value of the import."
+        },
+        "cifValue": {
+          "type": "number",
+          "description": "CIF value of the import."
+        },
+        "ddpValue": {
+          "type": "number",
+          "description": "DDP (Delivered Duty Paid) value of the import."
+        },
+        "incoterms": {
+          "type": "string",
+          "description": "INCOTERMS used for the import."
+        },
+        "originPort": {
+          "type": "string",
+          "description": "The port of origin."
+        },
+        "destinationPort": {
+          "type": "string",
+          "description": "The port of destination."
+        },
+        "importQuoteId": {
+          "type": "string",
+          "description": "Reference to ImportQuote. (Relationship: ImportQuote 1:N Import)"
+        },
+        "documents": {
+          "type": "array",
+          "description": "List of attached document URLs and names.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the document."
+              },
+              "url": {
+                "type": "string",
+                "description": "The URL of the document in Firebase Storage.",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "name",
+              "url"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "date",
+        "fobValue",
+        "exnValue",
+        "cifValue",
+        "ddpValue",
+        "incoterms",
+        "originPort",
+        "destinationPort"
+      ]
+    },
+    "ImportQuote": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ImportQuote",
+      "type": "object",
+      "description": "Represents a quotation for an import.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the import quote."
+        },
+        "quoteNumber": {
+          "type": "string",
+          "description": "The quote number."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the quote.",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes for the quote."
+        },
+        "attachedDocuments": {
+          "type": "array",
+          "description": "List of attached document URLs.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "quoteNumber",
+        "date"
+      ]
+    },
+    "Cost": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Cost",
+      "type": "object",
+      "description": "Represents an additional cost.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the cost."
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to Product. (Relationship: Product 1:N Cost)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the cost."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the cost."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of cost (e.g., operation, transport)."
+        }
+      },
+      "required": [
+        "id",
+        "productId",
+        "description",
+        "amount",
+        "type"
+      ]
+    },
+    "Supplier": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Supplier",
+      "type": "object",
+      "description": "Represents a supplier.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the supplier."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the supplier."
+        },
+        "seller": {
+          "type": "string",
+          "description": "The name of the salesperson for the supplier."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email of the supplier contact.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the supplier contact."
+        },
+        "country": {
+          "type": "string",
+          "description": "The country of the supplier."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Activo",
+            "Inactivo"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "phone",
+        "country",
+        "status"
+      ]
+    },
+    "Client": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Client",
+      "type": "object",
+      "description": "Represents a client.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the client."
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the client contact person."
+        },
+        "company": {
+          "type": "string",
+          "description": "The name of the client's company."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email of the contact person.",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the contact person."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Activo",
+            "Inactivo"
+          ]
+        },
+        "clientType": {
+          "type": "string",
+          "enum": [
+            "Empresa",
+            "Individual"
+          ]
+        },
+        "taxId": {
+          "type": "string",
+          "description": "The tax identification number (RIF/Cédula)."
+        },
+        "country": {
+          "type": "string",
+          "description": "The country of the client."
+        },
+        "address": {
+          "type": "string",
+          "description": "The physical address of the client."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "phone",
+        "status",
+        "clientType",
+        "taxId",
+        "country",
+        "address"
+      ]
+    },
+    "Quote": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Quote",
+      "type": "object",
+      "description": "Represents a sales quote.",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the quote." },
+        "quoteNumber": { "type": "string", "description": "A sequential, human-readable identifier for the quote (e.g., COT-2024-001)." },
+        "customer": {
+          "type": "object",
+          "description": "Denormalized client information for quick display.",
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "company": { "type": "string" },
+            "email": { "type": "string" },
+            "phone": { "type": "string" },
+            "taxId": { "type": "string" },
+            "address": { "type": "string" }
+          },
+          "required": ["id", "name", "email", "taxId"]
+        },
+        "items": {
+          "type": "array",
+          "description": "List of products included in the quote.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "name": { "type": "string" },
+              "quantity": { "type": "number" },
+              "price": { "type": "number", "description": "Price per unit at the time of the quote." }
+            },
+            "required": ["productId", "name", "quantity", "price"]
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Draft", "Sent", "Accepted", "Rejected", "Cancelled"],
+          "description": "The current status of the quote."
+        },
+        "date": { "type": "string", "format": "date", "description": "The date the quote was created." },
+        "currency": { "type": "string", "enum": ["USD", "VES"] },
+        "subtotal": { "type": "number", "description": "The total amount before taxes." },
+        "ivaAmount": { "type": "number", "description": "The calculated IVA amount (for VES payments)." },
+        "applyIgtf": { "type": "boolean", "description": "Indicates if IGTF should be applied (for USD payments)." },
+        "igtfAmount": { "type": "number", "description": "The calculated IGTF amount." },
+        "amount": { "type": "number", "description": "The total amount of the quote, including taxes." },
+        "notes": { "type": "string", "description": "Additional notes for the quote." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "quoteNumber", "customer", "items", "status", "date", "currency", "subtotal", "amount"]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents a sales order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the order."
+        },
+        "clientId": {
+          "type": "string",
+          "description": "Reference to Client. (Relationship: Client 1:N Order)"
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the order.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the order (e.g., pending, completed, approved)."
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to Product. (Relationship: Product 1:N Order)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Quantity of the product being ordered."
+        },
+        "unitPrice": {
+          "type": "number",
+          "description": "The price per unit for the ordered product."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes about the order."
+        },
+        "customer": {
+          "type": "object",
+          "properties": {
+            "address": { "type": "string" }
+          }
+        }
+      },
+      "required": [
+        "id",
+        "clientId",
+        "date",
+        "status",
+        "productId",
+        "quantity",
+        "unitPrice"
+      ]
+    },
+    "ActivityLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ActivityLog",
+      "type": "object",
+      "description": "Represents an activity log entry for user actions.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the activity log entry."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N ActivityLog)"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The timestamp of the activity.",
+          "format": "date-time"
+        },
+        "action": {
+          "type": "string",
+          "description": "The action performed by the user."
+        },
+        "details": {
+          "type": "string",
+          "description": "Detailed information about the activity."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "timestamp",
+        "action",
+        "details"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Includes denormalized 'role' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores product information.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier for the product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}/inventoryMovements/{inventoryMovementId}",
+        "definition": {
+          "entityName": "InventoryMovement",
+          "schema": {
+            "$ref": "#/backend/entities/InventoryMovement"
+          },
+          "description": "Stores inventory movement records for each product.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier for the product."
+            },
+            {
+              "name": "inventoryMovementId",
+              "description": "The unique identifier for the inventory movement."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/imports/{importId}",
+        "definition": {
+          "entityName": "Import",
+          "schema": {
+            "$ref": "#/backend/entities/Import"
+          },
+          "description": "Stores import transaction data.",
+          "params": [
+            {
+              "name": "importId",
+              "description": "The unique identifier for the import."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/importQuotes/{importQuoteId}",
+        "definition": {
+          "entityName": "ImportQuote",
+          "schema": {
+            "$ref": "#/backend/entities/ImportQuote"
+          },
+          "description": "Stores import quote information.",
+          "params": [
+            {
+              "name": "importQuoteId",
+              "description": "The unique identifier for the import quote."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}/costs/{costId}",
+        "definition": {
+          "entityName": "Cost",
+          "schema": {
+            "$ref": "#/backend/entities/Cost"
+          },
+          "description": "Stores cost information associated with each product.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier for the product."
+            },
+            {
+              "name": "costId",
+              "description": "The unique identifier for the cost."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/suppliers/{supplierId}",
+        "definition": {
+          "entityName": "Supplier",
+          "schema": {
+            "$ref": "#/backend/entities/Supplier"
+          },
+          "description": "Stores supplier information.",
+          "params": [
+            {
+              "name": "supplierId",
+              "description": "The unique identifier for the supplier."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/clients/{clientId}",
+        "definition": {
+          "entityName": "Client",
+          "schema": {
+            "$ref": "#/backend/entities/Client"
+          },
+          "description": "Stores client information.",
+          "params": [
+            {
+              "name": "clientId",
+              "description": "The unique identifier for the client."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/quotes/{quoteId}",
+        "definition": {
+          "entityName": "Quote",
+          "schema": {
+            "$ref": "#/backend/entities/Quote"
+          },
+          "description": "Stores sales quote information.",
+          "params": [
+            {
+              "name": "quoteId",
+              "description": "The unique identifier for the quote."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores order information.",
+          "params": [
+            {
+              "name": "orderId",
+              "description": "The unique identifier for the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/activityLogs/{activityLogId}",
+        "definition": {
+          "entityName": "ActivityLog",
+          "schema": {
+            "$ref": "#/backend/entities/ActivityLog"
+          },
+          "description": "Stores activity logs for each user. Ensures path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "activityLogId",
+              "description": "The unique identifier for the activity log entry."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to be multi-tenant, where core business data (Products, Orders, Clients, etc.) are stored in root-level collections. This allows multiple users with different roles to access and manage a shared set of data according to the permissions defined in the security rules. User-specific data that should not be shared, such as 'activityLogs', remains nested under the '/users/{userId}' path to enforce ownership-based security. The '/users' collection itself stores user profile information, including a 'role' field, which is critical for implementing role-based access control (RBAC) throughout the application."
+  }
+}

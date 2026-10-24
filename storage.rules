@@ -1,0 +1,13 @@
+rules_version = '2';
+
+// REGLAS DE STORAGE (ARCHIVOS)
+// Estas reglas son específicas para el almacenamiento de archivos (fotos, PDFs, etc.)
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Permitimos acceso total (lectura y escritura) a todos los archivos
+    // Esto soluciona el error 'storage/unauthorized'
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}

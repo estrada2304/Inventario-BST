@@ -1,0 +1,18 @@
+diff --git a/node_modules/next-themes/package.json b/node_modules/next-themes/package.json
+index 515856a..3b20e54 100644
+--- a/node_modules/next-themes/package.json
++++ b/node_modules/next-themes/package.json
+@@ -40,7 +40,7 @@
+   "peerDependencies": {
+     "next": ">=9",
+-    "react": "^16.8 || ^17 || ^18",
+-    "react-dom": "^16.8 || ^17 || ^18"
++    "react": "^16.8 || ^17 || ^18 || ^19",
++    "react-dom": "^16.8 || ^17 || ^18 || ^19"
+   },
+   "dependencies": {},
+   "devDependencies": {
+diff --git a/node_modules/next-themes/dist/index.js b/node_modules/next-themes/dist/index.js
+index b882e3c..d63f412 100644
+--- a[... TRUNCATED ...]
+\ No newline at end of file

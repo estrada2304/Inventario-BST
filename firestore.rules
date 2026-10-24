@@ -1,0 +1,71 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función de ayuda para verificar si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // --- REGLAS POR COLECCIÓN ---
+
+    // Perfiles de Usuario
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Productos e Inventario
+    match /products/{productId} {
+      allow read, write: if isAuthenticated();
+
+      match /inventoryMovements/{movementId} {
+        allow read, write: if isAuthenticated();
+      }
+      
+      match /costs/{costId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // Cotizaciones
+    match /quotes/{quoteId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Ventas (Órdenes)
+    match /orders/{orderId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Clientes
+    match /clients/{clientId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Proveedores
+    match /suppliers/{supplierId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Importaciones
+    match /imports/{importId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    match /importQuotes/{importQuoteId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Configuración y seguridad global
+    match /settings/security {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Regla de respaldo para el resto de la base de datos
+    match /{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}
