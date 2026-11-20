@@ -172,10 +172,6 @@ export function QuoteDetailsDialog({ isOpen, onClose, quote }: QuoteDetailsDialo
                     const currentStock = Number(prodData.stock) || 0;
                     const newStock = currentStock - info.quantity;
 
-                    if (newStock < 0) {
-                        throw new Error(`Stock insuficiente para "${info.name}". Stock actual: ${currentStock}, se requieren ${info.quantity}.`);
-                    }
-
                     let newProductStatus: Product['status'] = 'In Stock';
                     if (newStock <= 0) {
                         newProductStatus = 'Out of Stock';

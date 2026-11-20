@@ -268,10 +268,6 @@ export function OrderForm({ order, onSaveSuccess, onCancel }: OrderFormProps) {
             const currentStock = Number(prodData.stock) || 0;
             const newStock = currentStock + change;
             
-            if (newStock < 0) {
-                throw new Error(`Stock insuficiente para "${prodData.name}". Stock actual: ${currentStock}, se necesitan ${Math.abs(change)}.`);
-            }
-            
             let newProductStatus: Product['status'] = 'In Stock';
             if (newStock <= 0) {
               newProductStatus = 'Out of Stock';
@@ -576,7 +572,7 @@ export function OrderForm({ order, onSaveSuccess, onCancel }: OrderFormProps) {
                                 </FormControl>
                                 <SelectContent>
                                   {products?.map(p => (
-                                    <SelectItem key={p.id} value={p.id} disabled={(p.stock ?? 0) <= 0}>
+                                    <SelectItem key={p.id} value={p.id}>
                                         {p.name} (Stock: {p.stock ?? 0})
                                     </SelectItem>
                                   ))}
@@ -761,7 +757,6 @@ export function OrderForm({ order, onSaveSuccess, onCancel }: OrderFormProps) {
                       type="button"
                       className="w-full text-left px-3 py-3 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors border-b last:border-0 group"
                       onClick={() => selectProductFromSearch(product)}
-                      disabled={(product.stock ?? 0) <= 0}
                     >
                       <div className="flex justify-between items-start gap-2">
                         <div className="font-semibold group-hover:text-primary transition-colors">{product.name}</div>

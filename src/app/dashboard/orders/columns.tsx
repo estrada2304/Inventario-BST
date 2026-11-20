@@ -139,10 +139,6 @@ const EditableStatusCell = ({ getValue, row }: { getValue: () => any; row: Row<O
                     const currentStock = Number(productDoc.data().stock) || 0;
                     const newStock = currentStock - info.quantity;
 
-                    if (newStock < 0) {
-                        throw new Error(`Stock insuficiente para "${info.name}". No se puede reactivar la venta.`);
-                    }
-
                     let newProductStatus: Product['status'] = 'In Stock';
                     if (newStock <= 0) {
                         newProductStatus = 'Out of Stock';
@@ -182,11 +178,13 @@ const EditableStatusCell = ({ getValue, row }: { getValue: () => any; row: Row<O
         ? error 
         : error.message || 'No se pudo actualizar el estado de la venta.';
       
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: orderRef.path,
-          operation: 'update',
-          requestResourceData: { status: newStatus }
-      }));
+      if (error?.code === 'permission-denied') {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: orderRef.path,
+            operation: 'update',
+            requestResourceData: { status: newStatus }
+        }));
+      }
       
       toast({
         variant: 'destructive',

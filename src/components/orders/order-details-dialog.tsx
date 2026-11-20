@@ -150,52 +150,79 @@ export function OrderDetailsDialog({ isOpen, onClose, order }: OrderDetailsDialo
                            (order.status !== 'Completed' && order.status !== 'Completado');
       if (isCompleting) {
         await runTransaction(firestore, async (transaction) => {
-          const productDocs = new Map();
-          for (const item of order.items) {
-            const productRef = doc(firestore, 'products', item.productId);
+          const productQuantities = new Map<string, { name: string; quantity: number }>();
+          for (const item of (order.items || [])) {
+            if (!item.productId) continue;
+            const existing = productQuantities.get(item.productId);
+            if (existing) {
+              existing.quantity += Number(item.quantity) || 0;
+            } else {
+              productQuantities.set(item.productId, {
+                name: item.name || '',
+                quantity: Number(item.quantity) || 0,
+              });
+            }
+          }
+
+          const productUpdates: {
+            ref: any;
+            newStock: number;
+            status: Product['status'];
+            productId: string;
+            prodName: string;
+            serialNumber: string;
+            prevStock: number;
+            qty: number;
+          }[] = [];
+
+          for (const [productId, info] of productQuantities.entries()) {
+            const productRef = doc(firestore, 'products', productId);
             const productDoc = await transaction.get(productRef);
             if (!productDoc.exists()) {
-              throw new Error(`El producto "${item.name}" (ID: ${item.productId}) no fue encontrado en el inventario.`);
+              throw new Error(`El producto "${info.name}" (ID: ${productId}) no fue encontrado en el inventario.`);
             }
-            productDocs.set(item.productId, productDoc);
+            const prodData = productDoc.data();
+            const currentStock = Number(prodData.stock) || 0;
+            const newStock = currentStock - info.quantity;
+
+            let newProductStatus: Product['status'];
+            if (newStock <= 0) {
+              newProductStatus = 'Out of Stock';
+            } else if (newStock <= 5) {
+              newProductStatus = 'Low Stock';
+            } else {
+              newProductStatus = 'In Stock';
+            }
+
+            productUpdates.push({
+              ref: productRef,
+              newStock,
+              status: newProductStatus,
+              productId,
+              prodName: info.name || prodData.name || '',
+              serialNumber: prodData.serialNumber || '',
+              prevStock: currentStock,
+              qty: info.quantity,
+            });
           }
 
           const currentUserName = user?.displayName || (user?.email ? user.email.split('@')[0] : 'Ventas');
           const nowIso = new Date().toISOString();
 
-          for (const item of order.items) {
-             const productDoc = productDocs.get(item.productId);
-             const prodData = productDoc.data();
-             const productRef = doc(firestore, 'products', item.productId);
-             const currentStock = prodData.stock;
-             const newStock = currentStock - item.quantity;
-            
-             if (newStock < 0) {
-               throw new Error(`No hay suficiente stock para "${item.name}". Stock actual: ${currentStock}, se requieren: ${item.quantity}.`);
-             }
-             
-             let newProductStatus: Product['status'];
-             if (newStock <= 0) {
-                newProductStatus = 'Out of Stock';
-             } else if (newStock <= 5) {
-                newProductStatus = 'Low Stock';
-             } else {
-                newProductStatus = 'In Stock';
-             }
-             
-             transaction.update(productRef, { stock: newStock, status: newProductStatus, updatedAt: serverTimestamp() });
+          for (const update of productUpdates) {
+             transaction.update(update.ref, { stock: update.newStock, status: update.status, updatedAt: serverTimestamp() });
 
              const movementId = doc(collection(firestore, 'inventoryMovements')).id;
              const movementData = {
                id: movementId,
-               productId: item.productId,
-               productName: item.name || prodData.name || '',
-               serialNumber: prodData.serialNumber || '',
+               productId: update.productId,
+               productName: update.prodName,
+               serialNumber: update.serialNumber,
                type: 'exit',
-               quantity: item.quantity,
-               delta: -item.quantity,
-               previousStock: currentStock,
-               newStock: newStock,
+               quantity: update.qty,
+               delta: -update.qty,
+               previousStock: update.prevStock,
+               newStock: update.newStock,
                date: nowIso,
                notes: `Venta Completada #${order.id.slice(0, 8)} - Cliente: ${order.customer?.name || 'Cliente'}`,
                userName: currentUserName,
@@ -205,7 +232,7 @@ export function OrderDetailsDialog({ isOpen, onClose, order }: OrderDetailsDialo
              };
 
              transaction.set(doc(firestore, 'inventoryMovements', movementId), movementData);
-             transaction.set(doc(firestore, `products/${item.productId}/inventoryMovements`, movementId), movementData);
+             transaction.set(doc(firestore, `products/${update.productId}/inventoryMovements`, movementId), movementData);
           }
 
           transaction.update(orderRef, {
